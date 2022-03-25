@@ -90,8 +90,12 @@ export class CovidDataTable extends React.Component {
         let columns_select = [];
         let countries_select = [];
 
+
         
-        
+        console.log(this.props.currentDate);
+
+
+
 
         for (let i = 0; i < owid_fields.length; i++) {
 
@@ -204,7 +208,7 @@ export class CovidDataTable extends React.Component {
 
         self.setState({loading:true})
 
-        axios.get('https://adhtest.opencitieslab.org/api/3/action/datastore_search_sql?sql=SELECT%20*%20from%20"fc2a18a1-0c76-4afe-8934-2b9a9dacfef4"%20where%20date%20%3D%20%27' + this.props.currentDate + '%27',
+        axios.get('https://adhtest.opencitieslab.org/api/3/action/datastore_search_sql?sql=SELECT%20*%20from%20"' + this.props.api.countryData + '"%20where%20date%20%3D%20%27' + this.props.currentDate + '%27',
             { 
                 headers: {
                 authorization: process.env.REACT_API_KEY
@@ -353,7 +357,7 @@ export class CovidDataTable extends React.Component {
         let self = this;
         return (
             
-            <Card>
+            <Card className="mt-5">
                 <Card.Body>
 
                     <Row className="mb-4">
@@ -394,7 +398,9 @@ export class CovidDataTable extends React.Component {
                                 }
                             />
                         </Col>
-                        <Col></Col>
+                        <Col>
+                                
+                        </Col>
                         <Col xs="auto" className="align-self-center">
                             <span className="text-black-50">Source: <a className="text-black-50" target="_blank" href="https://www.ourworldindata.com">www.ourworldindata.com</a></span>
                         </Col>

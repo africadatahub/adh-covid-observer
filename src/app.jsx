@@ -23,7 +23,7 @@ import Accordion from 'react-bootstrap/Accordion';
 import moment from 'moment';
 
 import 'react-dates/initialize';
-import { DateRangePicker, SingleDatePicker, DayPickerRangeController } from 'react-dates';
+import { SingleDatePicker } from 'react-dates';
 import 'react-dates/lib/css/_datepicker.css';
 
 import getCountryISO2 from 'country-iso-3-to-2';
@@ -41,7 +41,7 @@ import { Leaderboard } from './components/Leaderboard';
 import { CountryData } from './components/CountryData';
 
 import * as countriesList from './data/countries.json';
-import { CovidDataTable } from './components/CovidDataTable';
+import { CovidDataTable } from './components/CovidDataTable2';
 import { faThemeisle } from '@fortawesome/free-brands-svg-icons';
 
 export class App extends React.Component {
@@ -108,7 +108,7 @@ export class App extends React.Component {
         })
 
         axios.get('https://adhtest.opencitieslab.org/api/3/action/datastore_search_sql?sql=SELECT%20*%20from%20"' + self.state.api.resurgenceData +'"%20WHERE%20date%20IN%20(SELECT%20max(date)%20FROM%20"' + self.state.api.resurgenceData +'")',
-        { headers: {
+            { headers: {
                 authorization: process.env.REACT_API_KEY
             }
         }).then(function(response) {
@@ -132,7 +132,6 @@ export class App extends React.Component {
 
         axios.get(self.state.api.baseUrl + 'action/datastore_search?resource_id=' + self.state.api.resurgenceData + '&include_total=true')
         .then(function(response) {
-
 
             let queries = [];
 
@@ -370,9 +369,7 @@ export class App extends React.Component {
                     { window.location.search != '?embed' ? <Header /> : '' }
 
                     { (window.innerWidth > 800) || (this.state.selectedCountries.length == 0 && window.innerWidth < 800) ? 
-                    
-                        <>
-
+                       
                             <Container style={this.state.no_embed_style} className="justify-content-between">
 
 
@@ -502,179 +499,136 @@ export class App extends React.Component {
                                 </div>}
 
 
-                                {this.state.selectedCountries.length > 0 && window.innerWidth < 800 ? '' :
-                                    <Row>
-                                        <Col xs="auto" lg={3}>
-                                            <h5 className="mt-1">Current date showing:</h5>
-                                            
-                                            <h1 className="cursor-pointer" style={{fontWeight: 500, fontSize: window.innerWidth < 1400 ? '2.2rem' : '2.2rem'}} onClick={() => this.setState({focused: true})}>
-                                                {
-                                                    new Date(this.state.currentDate).toLocaleDateString(
-                                                        'en-gb',
+                                {this.state.selectedCountries.length > 0 && window.innerWidth < 800 ? ''  :
+                                    
+                                        this.state.tab == 'map' ?
+                                            <Row>
+                                                <Col xs="auto" lg={3}>
+                                                    <h5 className="mt-1">Current date showing:</h5>
+                                                    
+                                                    <h1 className="cursor-pointer" style={{fontWeight: 500, fontSize: window.innerWidth < 1400 ? '2.2rem' : '2.2rem'}} onClick={() => this.setState({focused: true})}>
                                                         {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric'
-                                                        }
-                                                    )
-                                                } <FontAwesomeIcon icon={faCalendarDay} style={{ fontSize:"14px"}} color="#094151" className="cursor-pointer"/>
-                                            </h1>
+                                                            new Date(this.state.currentDate).toLocaleDateString(
+                                                                'en-gb',
+                                                                {
+                                                                year: 'numeric',
+                                                                month: 'long',
+                                                                day: 'numeric'
+                                                                }
+                                                            )
+                                                        } <FontAwesomeIcon icon={faCalendarDay} style={{ fontSize:"14px"}} color="#094151" className="cursor-pointer"/>
+                                                    </h1>
 
-                                            <Modal show={this.state.focused} onHide={() => this.setState({focused: false})} centered>
-                                                <Modal.Header closeButton>
-                                                    <Modal.Title>Pick a Date</Modal.Title>
-                                                </Modal.Header>
-                                                <Modal.Body style={{textAlign: 'center'}}>
+                                                    <Modal show={this.state.focused} onHide={() => this.setState({focused: false})} centered>
+                                                        <Modal.Header closeButton>
+                                                            <Modal.Title>Pick a Date</Modal.Title>
+                                                        </Modal.Header>
+                                                        <Modal.Body style={{textAlign: 'center'}}>
 
-                                                        <SingleDatePicker
-                                                            date={moment(this.state.currentDate)} // momentPropTypes.momentObj or null
-                                                            onDateChange={(date) => this.dateSelect(date)} // PropTypes.func.isRequired
-                                                            focused={this.state.focused} // PropTypes.bool
-                                                            onFocusChange={({ focused }) => this.setState({ focused })} // PropTypes.func.isRequired
-                                                            id="datepicker" // PropTypes.string.isRequired,
-                                                            isOutsideRange = {() => false}
-                                                            numberOfMonths={1}
-                                                            // withFullScreenPortal={window.innerWIdth < 800 ? true : false }
-                                                            
-                                                            keepOpenOnDateSelect
-                                                        />
-
-                                                </Modal.Body>
-                                            </Modal>
-
-                                                
-
-
-                                        </Col>
-                                        <Col lg={9}>
-                                            { this.state.loadingComplete ?
-                                            <>
-                                                <h5 className="mt-1">Scrub the timeline to change date:</h5>
-                                                <Row className="sticky-top">
-                                                    <Col xs="auto">
-                                                        <OverlayTrigger
-                                                        placement="bottom"
-                                                        overlay={<Tooltip>Play through entire timeline from current position.</Tooltip>}>
-                                                            <div>
-                                                            <Button variant="control-grey" onClick={() => this.togglePlayTimeline()} disabled={(this.state.currentDateCount == this.state.dates.length-1 || !this.state.loadingComplete) ? true : false}>
-                                                                <FontAwesomeIcon icon={ this.state.playingTimeline == true ? faPause : faPlay} color="#094151"/>
-                                                            </Button>
+                                                            <div className="datePicker1">
+                                                                <SingleDatePicker
+                                                                    date={moment(this.state.currentDate)} 
+                                                                    onDateChange={(date) => this.dateSelect(date)} 
+                                                                    focused={this.state.focused} 
+                                                                    onFocusChange={({ focused }) => this.setState({ focused })} 
+                                                                    id="datepicker" 
+                                                                    isOutsideRange = {() => false}
+                                                                    numberOfMonths={1}
+                                                                    // withFullScreenPortal={window.innerWIdth < 800 ? true : false }
+                                                                    keepOpenOnDateSelect
+                                                                />
                                                             </div>
-                                                        </OverlayTrigger>
-                                                    </Col>
-                                                    <Col>
-                                                        <Row className="gx-2">
+
+                                                        </Modal.Body>
+                                                    </Modal>
+
+                                                </Col>
+                                                <Col lg={9}>
+                                                    { this.state.loadingComplete ?
+                                                    <>
+                                                        <h5 className="mt-1">Scrub the timeline to change date:</h5>
+                                                        <Row className="sticky-top">
                                                             <Col xs="auto">
-                                                                <Button variant="control-grey" onClick={() => this.stepTimeline('back')} disabled={(this.state.currentDateCount == 0 || !this.state.loadingComplete) ? true : false}>
-                                                                    <FontAwesomeIcon icon={faStepBackward} color="#094151"/>
-                                                                </Button>
-                                                            </Col>
-                                                            <Col>
-                                                                <div className="bg-control-grey px-4 h-100 rounded cursor-pointer"> 
-                                                                    { this.state.dates.length > 0 ?
-                                                                    <Nouislider
-                                                                        instanceRef={instance => {
-                                                                            if (instance && !this.state.ref) {
-                                                                            this.setState({ ref: instance });
-                                                                            }
-                                                                        }}
-                                                                        onSlide={this.onUpdate}
-                                                                        range={{ min: 1, max: this.state.dates.length > 1 ? this.state.dates.length : 10 }}
-                                                                        step={1}
-                                                                        start={[this.state.dates.length]}
-                                                                        connect={false}
-                                                                        pips= {{
-                                                                            mode: 'count',
-                                                                            values: 6,
-                                                                            density: 4,
-                                                                            stepped: true
-                                                                        }}
-                                                                    />
-                                                                    : ''}
-                                                                </div>
-                                                            </Col>
-                                                            <Col xs="auto">
-                                                                <Button variant="control-grey" onClick={() => this.stepTimeline('forward')} disabled={(this.state.currentDateCount == this.state.dates.length-1 || !this.state.loadingComplete) ? true : false}>
-                                                                    <FontAwesomeIcon icon={faStepForward} color="#094151"/>
-                                                                </Button>
-                                                            </Col>
-                                                        </Row>
-                                                    </Col>
-                                                    <Col xs="auto">
-                                                        <OverlayTrigger
-                                                        placement="top"
-                                                        overlay={<Tooltip>Jump to most recent</Tooltip>}>
-                                                            <Button disabled={!this.state.loadingComplete} variant="control-grey" style={{height: '100%'}} onClick={this.jumpToLatest}>
-                                                                <FontAwesomeIcon icon={faRedo} color="#094151"/>
-                                                            </Button>
-                                                        </OverlayTrigger>
-                                                    </Col>
-                                                </Row>
-                                            </>
-                                            : 
-                                                <>
-                                                    <h5 className="mt-1">Loading historic data...</h5>
-                                                    <Placeholder as="p" animation="glow">
-                                                        <Placeholder xs={12} size="lg"/>
-                                                    </Placeholder>
-                                                </>
-                                            }
-                                            
-                                        </Col>
-                                        
-                                        {/* <Col lg={3} className="timeline-date-select"> */}
-                                            {/* { this.state.loadingComplete ?
-                                            <>
-                                                <h5 className="mt-1">Or select a specific date:</h5>
-                                                <Row className="gx-2">
-                                                    <Col xs="auto">
+                                                                <OverlayTrigger
+                                                                placement="bottom"
+                                                                overlay={<Tooltip>Play through entire timeline from current position.</Tooltip>}>
+                                                                        <div>
+                                                                        <Button variant="control-grey" onClick={() => this.togglePlayTimeline()} disabled={(this.state.currentDateCount == this.state.dates.length-1 || !this.state.loadingComplete) ? true : false}>
+                                                                            <FontAwesomeIcon icon={ this.state.playingTimeline == true ? faPause : faPlay} color="#094151"/>
+                                                                        </Button>
+                                                                        </div>
+                                                                    </OverlayTrigger>
+                                                                </Col>
+                                                                <Col>
+                                                                    <Row className="gx-2">
+                                                                        <Col xs="auto">
+                                                                            <Button variant="control-grey" onClick={() => this.stepTimeline('back')} disabled={(this.state.currentDateCount == 0 || !this.state.loadingComplete) ? true : false}>
+                                                                                <FontAwesomeIcon icon={faStepBackward} color="#094151"/>
+                                                                            </Button>
+                                                                        </Col>
+                                                                        <Col>
+                                                                            <div className="bg-control-grey px-4 h-100 rounded cursor-pointer"> 
+                                                                                { this.state.dates.length > 0 ?
+                                                                                <Nouislider
+                                                                                    instanceRef={instance => {
+                                                                                        if (instance && !this.state.ref) {
+                                                                                        this.setState({ ref: instance });
+                                                                                        }
+                                                                                    }}
+                                                                                    onSlide={this.onUpdate}
+                                                                                    range={{ min: 1, max: this.state.dates.length > 1 ? this.state.dates.length : 10 }}
+                                                                                    step={1}
+                                                                                    start={[this.state.dates.length]}
+                                                                                    connect={false}
+                                                                                    pips= {{
+                                                                                        mode: 'count',
+                                                                                        values: 6,
+                                                                                        density: 4,
+                                                                                        stepped: true
+                                                                                    }}
+                                                                                />
+                                                                                : ''}
+                                                                            </div>
+                                                                        </Col>
+                                                                        <Col xs="auto">
+                                                                            <Button variant="control-grey" onClick={() => this.stepTimeline('forward')} disabled={(this.state.currentDateCount == this.state.dates.length-1 || !this.state.loadingComplete) ? true : false}>
+                                                                                <FontAwesomeIcon icon={faStepForward} color="#094151"/>
+                                                                            </Button>
+                                                                        </Col>
+                                                                    </Row>
+                                                                </Col>
+                                                                <Col xs="auto">
+                                                                    <OverlayTrigger
+                                                                    placement="top"
+                                                                    overlay={<Tooltip>Jump to most recent</Tooltip>}>
+                                                                        <Button disabled={!this.state.loadingComplete} variant="control-grey" style={{height: '100%'}} onClick={this.jumpToLatest}>
+                                                                            <FontAwesomeIcon icon={faRedo} color="#094151"/>
+                                                                        </Button>
+                                                                    </OverlayTrigger>
+                                                                </Col>
+                                                            </Row>
+                                                        </>
+                                                        : 
+                                                            <>
+                                                                <h5 className="mt-1">Loading historic data...</h5>
+                                                                <Placeholder as="p" animation="glow">
+                                                                    <Placeholder xs={12} size="lg"/>
+                                                                </Placeholder>
+                                                            </>
+                                                        }
                                                         
-                                                        <Form.Select disabled={!this.state.loadingComplete} value={ new Date(this.state.currentDate).toLocaleDateString('en-gb', { day: 'numeric' }) } className="h-100 border-0 text-black bg-control-grey" onChange={this.dateSelect.bind(this)} ref={this.state.daySelect}>
-                                                            { Array.from({length: 31}, (x, i) => 
-                                                                <option key={i+1} value={i+1}>{i+1}</option>
-                                                            )}
-                                                        </Form.Select>
-                                                    </Col>
-                                                    <Col>
-                                                        <Form.Select disabled={!this.state.loadingComplete} value={ new Date(this.state.currentDate).toLocaleDateString('en-gb', { month: 'short' }) } className="h-100 border-0 text-black bg-control-grey" onChange={this.dateSelect.bind(this)} ref={this.state.monthSelect}>
-                                                            {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'].map((month,index) =>
-                                                                <option key={index} value={month}>{month}</option>
-                                                            )}
-                                                        </Form.Select>
-                                                    </Col>
-                                                    <Col>
-                                                        <Form.Select disabled={!this.state.loadingComplete} value={ new Date(this.state.currentDate).toLocaleDateString('en-gb', { year: 'numeric' }) } className="h-100 border-0 text-black bg-control-grey" onChange={this.dateSelect.bind(this)} ref={this.state.yearSelect}>
-                                                            <option key="2020" value="2020">2020</option>
-                                                            <option key="2021" value="2021">2021</option>
-                                                            <option key="2022" value="2022">2022</option>
-                                                        </Form.Select>
-                                                    </Col>
-                                                    <Col xs="auto">
-                                                        <OverlayTrigger
-                                                        placement="top"
-                                                        overlay={<Tooltip>Jump to most recent</Tooltip>}>
-                                                            <Button disabled={!this.state.loadingComplete} variant="control-grey" style={{height: '100%'}} onClick={this.jumpToLatest}>
-                                                                <FontAwesomeIcon icon={faRedo} color="#094151"/>
-                                                            </Button>
-                                                        </OverlayTrigger>
-                                                    </Col>
-                                                </Row>
-                                            </>
-                                            : 
-                                                <>
-                                                <h5 className="mt-1">...</h5>
-                                                <Placeholder as="p" animation="glow">
-                                                    <Placeholder xs={12} size="lg"/>
-                                                </Placeholder>
-                                                </>
-                                            } */}
-                                        {/* </Col> */}
-                                    </Row>
+                                                </Col>
+                                            </Row>
+                                        : ''
+                                    
                                 }
+                                    
 
                             </Container>
                         
-                        </>
+                        
+
+                        
                     
                     : '' }
                  
@@ -708,10 +662,10 @@ export class App extends React.Component {
                         </Row>
                     </Container>
                 :
-                    <Container className="mb-5" fluid>
+                    <Container className="my-4" fluid>
                         <Row>
                             <Col>
-                                <CovidDataTable currentDate={this.state.currentDate} resurgenceData={this.state.selectedDateData}/>
+                                <CovidDataTable currentDate={this.state.currentDate} api={this.state.api} />
                             </Col>
                         </Row>
                     </Container>

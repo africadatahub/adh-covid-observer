@@ -99,7 +99,7 @@ body{
     z-index: 2000 !important;
 }
 
-.DateInput {
+.datePicker1 .DateInput {
     display: none !important;
 }
 
@@ -119,6 +119,53 @@ body{
 
 .SingleDatePicker > div {
 }
+
+.DateRangePicker_picker {
+    z-index: 9000 !important;
+}
+
+.DateRangePicker_1 .DayPicker_transitionContainer {
+    border: 1px solid #666;
+}
+
+.DateRangePickerInput_1 {
+    background-color: $control-grey !important;
+    border: none !important;
+    height: 30px !important;
+    border-radius: 6px;
+}
+
+.DateInput_input {
+    font-weight: bold !important;
+}
+
+.DateInput_input__small {
+    font-size: 1rem !important;
+}
+
+.DateRangePickerInput__withBorder {
+    border-radius: 6px !important;
+}
+
+.DateInput_input, .DateInput {
+    background: transparent !important;
+}
+
+.DateInput_input__focused {
+    border-bottom: 2px solid $primary !important;
+}
+
+.CalendarDay__selected_span {
+    background: $primary !important; 
+    border: 1px solid $primary !important; 
+  }
+  
+  .CalendarDay__selected {
+    background: $primary !important;
+    border: 1px solid $primary !important;
+    color: white;
+  }
+  
 
 h1 {
     font-weight: 600
@@ -346,7 +393,7 @@ hr {
 /* Data Table Dropdowns */
 
 .rmsc {
-    border-radius: 6px;
+    border-radius: 6px !important;
     height: 30px;
     position: relative;
     z-index: 999;
@@ -368,4 +415,10 @@ hr {
     height: 30px !important;
 }
 
+.form-select {
+    background-color: $control-grey !important;
+    border: none !important;
+    height: 30px;
+    border-radius: 6px;
+}
 
