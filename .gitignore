@@ -3,3 +3,7 @@ dist
 .parcel-cache
 .cache
 .env
+
+# Raw CKAN CSV exports. Inputs to scripts/build-data.js only - too large for git.
+# The generated bundle in src/data/bundled/ is what gets committed.
+data-source/*.csv

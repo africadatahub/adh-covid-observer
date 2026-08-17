@@ -4,6 +4,13 @@
     "repository": "https://github.com/africadatahub/adh-covid-observer.git",
     "author": "dirk@openup.org.za",
     "license": "MIT",
+    "comment_terser": "Parcel resolves terser 5.7.1, which depends on source-map 0.7.3. That version assumes it is in a browser whenever a global fetch exists and then refuses to load mappings.wasm, so `parcel build` dies in the terser optimizer on Node 18+ (global fetch). terser 5.16+ replaced source-map with @jridgewell/source-map and has no such check. Pinned for both package managers: Netlify installs with yarn (resolutions), npm is used locally (overrides).",
+    "resolutions": {
+        "terser": "5.31.6"
+    },
+    "overrides": {
+        "terser": "5.31.6"
+    },
     "scripts": {
         "dev": "parcel src/index.html",
         "build": "copyfiles --flat ./src/adh-covid-observer.png ./dist && copyfiles --flat ./src/adh-logo.svg ./dist && copyfiles --flat ./src/adh-favicon.png ./dist && parcel build ./src/index.html"

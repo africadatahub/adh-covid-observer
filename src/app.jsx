@@ -85,7 +85,7 @@ export class App extends React.Component {
                     }
                 },
                 dataset: 'owid',
-                env: 'dev'
+                env: 'prod'
             },
 
             no_embed_style: {
@@ -233,6 +233,9 @@ export class App extends React.Component {
                 self.setState({loading: false, error: true});
             })
 
+        }).catch(function(error) {
+            console.log(error);
+            self.setState({loading: false, error: true});
         })
     }
    
