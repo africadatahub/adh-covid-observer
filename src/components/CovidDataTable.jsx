@@ -1,5 +1,4 @@
 import React from 'react';
-import axios from 'axios';
 import _ from 'lodash';
 
 import Row from 'react-bootstrap/Row';
@@ -30,6 +29,7 @@ import Spinner from 'react-bootstrap/Spinner';
 import * as countriesList from '../data/countries.json';
 
 import { owid_fields } from '../data/owid_fields.js';
+import { loadMetricRange, countryDateRange } from '../data/bundle.js';
 import * as definitions from '../data/definitions.json';
 import * as texts from '../data/texts.json';
 
@@ -112,30 +112,20 @@ export class CovidDataTable extends React.Component {
             )
         }
 
-        let query = 'SELECT%20max%28date%29%2Cmin%28date%29%20FROM%20"' + this.props.api.data[this.props.api.dataset][this.props.api.env].countryData + '"';
+        // The date picker's bounds come from the bundle's index rather than a SQL max/min.
+        let range = countryDateRange(this.props.api.dataset);
 
-        axios.get(this.props.api.url[this.props.api.env] + 'action/datastore_search_sql?sql=' + query,
-            { headers: {
-                "Authorization": this.props.api.env == 'dev' ? process.env.CKANDEV : process.env.CKAN
+        this.setState(
+            {
+                countries_select: countries_select,
+                countries_selected: countries_select,
+                metric_selected: 'total_cases',
+                startDate: moment(range.max).add(-1,'months'),
+                endDate: moment(range.max),
+                maxDate: moment(range.max),
+                minDate: moment(range.min)
             }
-        }).then((response) => {
-
-            this.setState(
-                {
-                    countries_select: countries_select,
-                    countries_selected: countries_select,
-                    metric_selected: 'total_cases',
-                    startDate: moment(response.data.result.records[0].max).add(-1,'months'),
-                    endDate: moment(response.data.result.records[0].max),
-                    maxDate: moment(response.data.result.records[0].max),
-                    minDate: moment(response.data.result.records[0].min)
-                    
-    
-                }
-            );
-            
-
-        })
+        );
 
         
 
@@ -235,28 +225,18 @@ export class CovidDataTable extends React.Component {
 
         let self = this;
 
-        let countries_selected_query = '';
+        let isoCodes = this.state.countries_selected.map(function(c) { return c.value });
 
-        let countries_selected = this.state.countries_selected;
+        if(isoCodes.length > 0) {
 
-        for (let index = 0; index < countries_selected.length; index++) {
-            countries_selected_query += '%27' + countries_selected[index].value + '%27';
-            if(index < (countries_selected.length - 1)) {
-                countries_selected_query += '%2C';
-            }
-        }
-
-        let query = 'SELECT%20date%2Ciso_code%2Clocation%2C' + this.state.metric_selected + '%20FROM%20"' + this.props.api.data[this.props.api.dataset][this.props.api.env].countryData + '"%20WHERE%20date%20BETWEEN%20%27' + moment(this.state.startDate).format('YYYY-MM-DD') + '%27%20AND%20%27' + moment(this.state.endDate).format('YYYY-MM-DD') + '%27%20AND%20iso_code%20IN%28' + countries_selected_query + '%29';
-        
-        
-
-        if(this.state.countries_selected.length > 0) {
-
-            axios.get(this.props.api.url[this.props.api.env] + 'action/datastore_search_sql?sql=' + query,
-                { headers: {
-                    authorization: this.props.api.env == 'dev' ? process.env.CKANDEV : process.env.CKAN
-                }
-            }).then(function(response) {
+            // One metric across the selected countries and date range, read from the bundle.
+            loadMetricRange(
+                this.props.api.dataset,
+                this.state.metric_selected,
+                isoCodes,
+                moment(this.state.startDate).format('YYYY-MM-DD'),
+                moment(this.state.endDate).format('YYYY-MM-DD')
+            ).then(function(records) {
 
                 let data = []
 
@@ -289,7 +269,7 @@ export class CovidDataTable extends React.Component {
 
 
 
-                let grouped_data = _.groupBy(response.data.result.records,'iso_code');
+                let grouped_data = _.groupBy(records,'iso_code');
 
                 let first_country = Object.keys(grouped_data)[0];
 
