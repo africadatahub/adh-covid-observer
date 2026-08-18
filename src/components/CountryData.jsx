@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import axios from 'axios';
 import _ from 'lodash';
 import moment from 'moment';
 
@@ -21,6 +20,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faFileDownload } from '@fortawesome/free-solid-svg-icons';
 
 import * as definitions from '../data/definitions.json';
+
+import { loadCountry } from '../data/bundle.js';
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -51,21 +52,16 @@ export class CountryData extends React.Component {
     componentDidMount() {
         let self = this;
 
-        axios.get(this.props.api.url[this.props.api.env] + 'action/datastore_search_sql?sql=SELECT%20*%20from%20"' + this.props.api.data[this.props.api.dataset][this.props.api.env].countryData + '"%20WHERE%20iso_code%20LIKE%20%27' + this.props.selectedCountry[0].iso_code + '%27',
-            { headers: {
-                "Authorization": this.props.api.env == 'dev' ? process.env.CKANDEV : process.env.CKAN
-            }
-        })
-        .then(function(response) {
-            
-            let records = _.sortBy(response.data.result.records, ['date']);
-
+        // Every metric for this country, from the bundled dataset.
+        loadCountry(this.props.api.dataset, this.props.selectedCountry[0].iso_code)
+        .then(function(records) {
             self.setState({
                 data: records,
                 loading: false
             });
-
-            
+        }).catch(function(error) {
+            console.log(error);
+            self.setState({loading: false});
         })
 
     }
@@ -89,20 +85,16 @@ export class CountryData extends React.Component {
                 loading: true
             });
 
-            axios.get(this.props.api.url[this.props.api.env] + 'action/datastore_search_sql?sql=SELECT%20*%20from%20"' + this.props.api.data[this.props.api.dataset][this.props.api.env].countryData + '"%20WHERE%20iso_code%20LIKE%20%27' + this.props.selectedCountry[0].iso_code + '%27',
-                { headers: {
-                    "Authorization": this.props.api.env == 'dev' ? process.env.CKANDEV : process.env.CKAN
-                }
-            })
-            .then(function(response) {
-
-                let records = _.sortBy(response.data.result.records, ['date']);
-                
+            // Every metric for this country, from the bundled dataset.
+            loadCountry(this.props.api.dataset, this.props.selectedCountry[0].iso_code)
+            .then(function(records) {
                 self.setState({
                     data: records,
                     loading: false
                 });
-
+            }).catch(function(error) {
+                console.log(error);
+                self.setState({loading: false});
             })
 
         }

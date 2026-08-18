@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import axios from 'axios';
 import _ from 'lodash';
 import './app.scss';
 
@@ -43,6 +42,8 @@ import { CovidDataTable } from './components/CovidDataTable';
 
 import * as texts from './data/texts.json';
 
+import { loadCases } from './data/bundle.js';
+
 
 export class App extends React.Component {
 
@@ -51,41 +52,14 @@ export class App extends React.Component {
         super();
         this.state = {
            
+            /*
+             * The data is bundled statically now (see src/data/bundle.js), so the CKAN
+             * host, resource ids and API keys that used to live here are gone. Only the
+             * dataset name remains - it selects which bundle to read and which texts and
+             * definitions to show.
+             */
             api: {
-                url: {
-                    dev: 'https://ckandev.africadatahub.org/api/3/',
-                    prod: 'https://ckan.africadatahub.org/api/3/'
-                },
-                data: {
-                    owid: {
-                        dev: {
-                            caseData: '9cdc672f-7e1e-4d40-91e2-be0d9989c759',
-                            countryData: '65a5b80d-b57a-43d4-bf9c-20cafddc7d60'
-                        },
-                        // prod: {
-                        //     caseData: 'c7c03399-021e-4339-ad9d-93aee8aa950a',
-                        //     countryData: 'b2b6b48a-3685-4e1a-8d8c-8aab5bae3118',
-                        //     definitions: 'c070bdc8-59df-4d11-bc2d-cf0fa5e425fe'
-                        // },
-                        prod: {
-                            caseData: '72da1306-e970-4398-9f1a-2a65beeb960e',
-                            countryData: '0509abb8-fb51-4b4d-a9e9-90eb33cf2cdc'
-                        }
-                    },
-                    acdc: {
-                        // dev: {
-                        //     caseData: '75e4ca59-8971-41f6-a54b-e182297685fa',
-                        //     countryData: '1b14898d-d74c-4eb5-a97d-fd45e3f36c49'
-                        // },
-                        prod: {
-                            caseData: '1b16284b-8fbf-46c7-b940-99e7fdbb8a3e',
-                            countryData: 'f283fdbb-cb46-427f-8fb8-0875c0e659f6'
-                        }
-                        
-                    }
-                },
-                dataset: 'owid',
-                env: 'prod'
+                dataset: 'owid'
             },
 
             no_embed_style: {
@@ -135,122 +109,53 @@ export class App extends React.Component {
             self.setState({no_embed_style: { paddingTop: paddingTop }})
         }
 
-        if(document.URL.indexOf('acdc') > -1) {
+        let dataset = document.URL.indexOf('acdc') > -1 ? 'acdc' : 'owid';
 
-            let api = self.state.api;
-            api.dataset = 'acdc';
-            api.env = 'prod';
-
-            self.setState({api: api});
+        if(dataset == 'acdc') {
+            self.setState({api: { dataset: dataset }});
         } else {
-
             self.setState({loggedIn: true});
-        
         }
 
 
-        // Fetch data for the latest date...
-        axios.get(self.state.api.url[self.state.api.env] + 'action/datastore_search_sql?sql=SELECT%20*%20from%20"' + self.state.api.data[self.state.api.dataset][self.state.api.env].caseData +'"%20WHERE%20date%20IN%20(SELECT%20max(date)%20FROM%20"' + self.state.api.data[self.state.api.dataset][self.state.api.env].caseData +'")',
-            { headers: {
-                "Authorization": self.state.api.env == 'dev' ? process.env.CKANDEV : process.env.CKAN
-            }
-        }).then(function(response) {
-            self.setState({data: response.data.result.records});
-            let dates = _.map(_.uniqBy(response.data.result.records, 'date'),'date');
-            self.setState({
-                dates: dates,
-                loading: false,
-                currentDate: dates[dates.length-1],
-                currentDateCount: dates.length-1,
-                selectedDateData: _.orderBy(_.filter(self.state.data, function(o) { return (o.date == dates[dates.length-1]) }),[self.state.selectedBaseMetric],['desc']),
-                selectedDateDataMap: _.orderBy(_.filter(self.state.data, function(o) { return (o.date == dates[dates.length-1]) }),[self.state.selectedBaseMetric],['desc']),
-                update: self.state.update + 1
-            });
+        /*
+         * One read of the bundled case table. This used to be a SQL query for the latest
+         * day plus a paginated sweep of the whole table in 32,000-row pages, because CKAN
+         * capped any single response at 32,000 rows.
+         */
+        loadCases(dataset).then(function(records) {
 
-            // self.state.ref.noUiSlider.set(10);
-        }).catch(function(error) {
-            console.log(error);
-            self.setState({loading: false, error: true});
-        })
-       
-        //  CKAN returns a max of 32000 rows. Find out how many row there are in the entire set.
+            let dates = _.map(_.uniqBy(records, 'date'), 'date');
+            dates = _.orderBy(dates, [(date) => new Date(date)], ['asc']);
 
-        axios.get(self.state.api.url[self.state.api.env] + 'action/datastore_search?resource_id=' + self.state.api.data[self.state.api.dataset][self.state.api.env].caseData + '&include_total=true',
-            { headers: {
-                "Authorization": self.state.api.env == 'dev' ? process.env.CKANDEV : process.env.CKAN
-                }
-        }).then(function(response) {
+            /*
+             * Order the opening day through orderData/orderMapData, the same as every
+             * later day. The leaderboard drops countries with no value for the metric
+             * while the map keeps them so they can render grey - and missing values are
+             * null here, which lodash sorts above numbers on a descending sort.
+             */
+            self.setState({ data: records, dates: dates }, function() {
 
-            // Do queries in increments of 32000
-
-            let queries = [];
-
-            for (let count = 0; count < Math.ceil(response.data.result.total / 32000); count++) {
-                let offset = count > 0 ? '&offset=' + (count * 32000) : '';
-                queries.push(self.state.api.url[self.state.api.env] + 'action/datastore_search?resource_id=' + self.state.api.data[self.state.api.dataset][self.state.api.env].caseData + '&limit=32000' + offset);
-            }
-
-            let queries_get = [];
-
-            for (let query = 0; query < queries.length; query++) {
-                
-                queries_get.push(axios.get(queries[query],{ headers: {"Authorization": self.state.api.env == 'dev' ? process.env.CKANDEV : process.env.CKAN}}))
-
-            }
-
-            // We're manually setting this now - this is not good and needs to be reworked.
-
-            axios.all(queries_get).then(axios.spread((...responses) => {
-
-                let data = [];
-
-                for (let count = 0; count < responses.length; count++) {
-                    let response = responses[count];
-                    data = data.concat(response.data.result.records);
-                }
+                let latest = dates.length - 1;
 
                 self.setState({
-                    data: data
-                });
-
-                let dates = _.map(_.uniqBy(data, 'date'),'date');
-                dates = _.orderBy(dates, [(date) => new Date(date)], ['asc']);
-
-                self.setState({
-                    dates: dates,
                     loading: false,
-                    currentDate: dates[dates.length-1],
-                    currentDateCount: dates.length-1,
-                    selectedDateData: _.orderBy(_.filter(self.state.data, function(o) { return (o.date == dates[dates.length-1]) }),[self.state.selectedBaseMetric],['desc']),
-                    selectedDateDataMap: _.orderBy(_.filter(self.state.data, function(o) { return (o.date == dates[dates.length-1]) }),[self.state.selectedBaseMetric],['desc']),
+                    loadingComplete: true,
+                    currentDate: dates[latest],
+                    currentDateCount: latest,
+                    selectedDateData: self.orderData(latest),
+                    selectedDateDataMap: self.orderMapData(latest),
                     update: self.state.update + 1
                 });
-    
-                self.setState({loadingComplete: true});
-                
-            })).catch(error => {
-                console.log(error);
-                self.setState({loading: false, error: true});
-            })
+
+            });
 
         }).catch(function(error) {
             console.log(error);
             self.setState({loading: false, error: true});
         })
-    }
-   
 
-    CSVToJSON = csv => {
-        const lines = csv.split('\n');
-        const keys = lines[0].split(',');
-        return lines.slice(1).map(line => {
-            return line.split(',').reduce((acc, cur, i) => {
-                const toAdd = {};
-                toAdd[keys[i]] = cur;
-                return { ...acc, ...toAdd };
-            }, {});
-        });
-    };
+    }
 
     orderData = (dateCount) => {
         let self = this;

@@ -16,17 +16,11 @@
         "build": "copyfiles --flat ./src/adh-covid-observer.png ./dist && copyfiles --flat ./src/adh-logo.svg ./dist && copyfiles --flat ./src/adh-favicon.png ./dist && parcel build ./src/index.html"
     },
     "dependencies": {
-        "@elsdoerfer/react-arrow": "^1.0.4",
         "@fortawesome/fontawesome-svg-core": "^1.2.36",
         "@fortawesome/free-brands-svg-icons": "^5.15.4",
-        "@fortawesome/free-regular-svg-icons": "^5.15.4",
         "@fortawesome/free-solid-svg-icons": "^5.15.4",
         "@fortawesome/react-fontawesome": "^0.1.15",
-        "@mdi/js": "^6.7.96",
-        "@mdi/react": "^1.6.0",
-        "axios": "^0.21.1",
         "bootstrap": "5.1.1",
-        "classnames": "^2.3.1",
         "copyfiles": "^2.4.1",
         "country-iso-3-to-2": "^1.1.0",
         "file-saver": "^2.0.5",
@@ -45,12 +39,9 @@
         "react-flip-move": "^3.0.4",
         "react-leaflet": "^3.2.1",
         "react-multi-select-component": "^4.1.13",
-        "react-select": "^5.2.1",
         "react-sparklines": "^1.7.0",
         "recharts": "^2.1.10",
-        "rsuite-table": "^5.0.3",
-        "styled-components": "^5.3.3",
-        "uri.js": "^0.1.3"
+        "styled-components": "^5.3.3"
     },
     "devDependencies": {
         "@parcel/transformer-less": "2.0.0-beta.2",
